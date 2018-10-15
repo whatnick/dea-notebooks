@@ -1,6 +1,6 @@
-# Download USGS level 1 products using machine to machine method; order and download USGS level 2 products ( surface reflectance, temperature brightness, and pixel quality) using ESPA ordering sytem API. 
+# Download USGS level 2 products (surface reflectance, temperature brightness, and pixel quality) using ESPA ordering sytem API, prepare yaml files and ingest them into datacube. 
 
-## Usage:  
+## download:  
 
 - start VDI
 
@@ -8,18 +8,22 @@
 
 - module load agdc-py3-prod
 
-- download the files.py from the Support_files folder in order to create logs when running the script
-
-- fill the content in the configuration files level1_download.cfg for Level 1 products and level2_order_download.cfg for Level 2 products 
-
-- python level1_download.py -c level1_download.cfg  (for Level1 products, need to login as LPGS username to be able to run)
+- fill the content in the configuration file level2_order_download.cfg for Level 2 products 
 
 - python level2_order_download.py -c level2_order_download.cfg
 
+## produce yaml files:
+
+- ./unzip.sh to unzip the downloaded zip files 
+- ./ledaps_lasrc_pbs_tasker.sh and ./do_qsub.sh to produce yaml files
+
+## Ingest into datacube:
+
+- datacube --config_file ~/.ard-interoperability.conf dataset add yamls/*/*.yaml
 
 # Compare the ARD products with the USGS level2 products. 
 
-## compare_ard_usgs.ipynb notebook is used to compare the ard products and USGS level2 products. 
+## compare_ard_usgsl2.ipynb notebook is used to compare the ARD products and USGS level2 products. 
 
 ![Alt text](compare_gui.jpg?raw=true "Title")
 
