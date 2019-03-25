@@ -1,0 +1,3 @@
+shp/test_plgon.shp
+shp/small.shp
+shp/some_cloud.shp
