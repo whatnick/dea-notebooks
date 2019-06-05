@@ -1,12 +1,14 @@
 # Compare products from datacube. 
 
-## Usage:  
+## Set up environment and run:  
 
 - start VDI
 
 - module use /g/data/v10/public/modules/modulefiles, if it is not automatically loaded when starting VDI.
 
 - module load dea
+
+- note: for USGS users using AWS, the above processes can be skipped.
 
 - run the compare_products_opensource.ipynb notebook 
 
@@ -26,7 +28,7 @@ while each line above points to a specific database. The 'default' database in G
 
 - 3. After the database source is set up, the available databases are shown in the Database choice drop down menu. Select one database e.g. default. 
 
-- 4. After selecting a database, all available products in the database are shown in the Product drop down menu. Select one product, e.g. ls8_ard.
+- 4. After selecting a database, all available products in the database are shown in the Product drop down menu. Select one product, e.g. ls8_ard. Note: loading all tables from the Geoscience Australia default operational database can take much longer time than expected, please be patient!
 
 - 5. After the product is selected, its available bands are shown in the Bands to load drop down menu. Select one or more bands for this product, e.g. nbar_blue, nbar_green for ls8_ard.
 

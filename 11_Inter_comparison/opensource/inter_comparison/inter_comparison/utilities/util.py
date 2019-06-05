@@ -260,7 +260,9 @@ def get_data_opensource(prod_info, input_lon, input_lat, acq_min, acq_max,
                     data = only_return_whole_scene(data)
 
             return_data = { 
-                           source_prod: {'data': data, 'find_list': sample_fd_ds }
+                           source_prod: {'data': data, 
+                                         'mask_band': mask_band,
+                                         'find_list': sample_fd_ds }
                           }
     
     return return_data 
@@ -337,7 +339,9 @@ def get_data_opensource_shapefile(prod_info, acq_min, acq_max, shapefile,
                         data = only_return_whole_scene(data)                                             
 
                 return_data = {
-                               source_prod: {'data': data, 'find_list': sample_fd_ds }
+                               source_prod: {'data': data,
+                                             'mask_band': mask_band,
+                                             'find_list': sample_fd_ds }
                               }
                     
     return return_data 

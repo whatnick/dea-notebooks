@@ -1,12 +1,14 @@
 # Compare products from datacube. 
 
-## Usage:  
+## Set up environment and run:  
 
 - start VDI
 
 - module use /g/data/v10/public/modules/modulefiles, if it is not automatically loaded when starting VDI.
 
 - module load dea
+
+- note: for USGS users using AWS, the above processes can be skipped.
 
 - run the compare_products_opensource.ipynb notebook 
 
@@ -15,8 +17,7 @@
 
 ### Select products and load them from datacube
 
- 
-
+![Alt text](inter_comparison/docs/loading_data_gui.jpg?raw=true "Title")
 
 - 1. Create a file containing the database sources. For example, create a file called database_sources.txt with content:
 examples/.ard-interoperability.conf
@@ -27,7 +28,7 @@ while each line above points to a specific database. The 'default' database in G
 
 - 3. After the database source is set up, the available databases are shown in the Database choice drop down menu. Select one database e.g. default. 
 
-- 4. After selecting a database, all available products in the database are shown in the Product drop down menu. Select one product, e.g. ls8_ard.
+- 4. After selecting a database, all available products in the database are shown in the Product drop down menu. Select one product, e.g. ls8_ard. Note: loading all tables from the Geoscience Australia default operational database can take much longer time than expected, please be patient!
 
 - 5. After the product is selected, its available bands are shown in the Bands to load drop down menu. Select one or more bands for this product, e.g. nbar_blue, nbar_green for ls8_ard.
 
@@ -45,8 +46,7 @@ while each line above points to a specific database. The 'default' database in G
 
 - 12. Run the next three cells in the Jupyter notebook, another GUI is produced for plotting.
 
- 
-
+![Alt text](inter_comparison/docs/ploting_data_gui.jpg?raw=true "Title")
 
 - 13. Based on the products loaded earlier, in this GUI, the availble pairs of location and time are shown in the Location and time drop down menu. Select the location and time of your interest. 
 
@@ -60,8 +60,7 @@ while each line above points to a specific database. The 'default' database in G
 
 - 18. After all products are selected, click the Plot button to plot these products.
 
- 
-
+![Alt text](inter_comparison/docs/ploting_data.jpg?raw=true "Title")
 
 - 19. Then the time series data for the band (chosen from all available bands) for each product is drawn.
 
