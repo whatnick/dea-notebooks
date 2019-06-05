@@ -15,7 +15,7 @@
 
 ### Select products and load them from datacube
 
-![Alt text](loading_data_gui.jpg?raw=true "Title")
+![Alt text](inter_comparison/docs/loading_data_gui.jpg?raw=true "Title")
 
 - 1. Create a file containing the database sources. For example, create a file called database_sources.txt with content:
 examples/.ard-interoperability.conf
@@ -44,7 +44,7 @@ while each line above points to a specific database. The 'default' database in G
 
 - 12. Run the next three cells in the Jupyter notebook, another GUI is produced for plotting.
 
-![Alt text](ploting_data_gui.jpg?raw=true "Title")
+![Alt text](inter_comparison/docs/ploting_data_gui.jpg?raw=true "Title")
 
 - 13. Based on the products loaded earlier, in this GUI, the availble pairs of location and time are shown in the Location and time drop down menu. Select the location and time of your interest. 
 
@@ -58,7 +58,7 @@ while each line above points to a specific database. The 'default' database in G
 
 - 18. After all products are selected, click the Plot button to plot these products.
 
-![Alt text](ploting_data.jpg?raw=true "Title")
+![Alt text](inter_comparison/docs/ploting_data.jpg?raw=true "Title")
 
 - 19. Then the time series data for the band (chosen from all available bands) for each product is drawn.
 
