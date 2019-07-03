@@ -19,7 +19,9 @@ import plotly
 import fiona
 from datacube.utils import geometry
 import os
-
+import csv
+from os.path import join as pjoin
+import configparser
 
 
 # functions to retrieve data
@@ -51,11 +53,14 @@ def geometry_mask(geoms, geobox, all_touched=False, invert=False):
     numpy mask, where pixels that overlap shapes are False.
     :param list[Geometry] geoms: geometries to be rasterized
     :param datacube.utils.GeoBox geobox:
-    :param bool all_touched: If True, all pixels touched by geometries will be burned in. If
-                             false, only pixels whose center is within the polygon or that
-                             are selected by Bresenham's line algorithm will be burned in.
-    :param bool invert: If True, mask will be True for pixels that overlap shapes.
+    :param bool all_touched: If True, all pixels touched by geometries will be
+                             burned in. If false, only pixels whose center is 
+                             within the polygon or that are selected by 
+                             Bresenham's line algorithm will be burned in.
+    :param bool invert: If True, mask will be True for pixels that overlap 
+                        shapes.
     """
+    
     return rasterio.features.geometry_mask([geom.to_crs(geobox.crs) for geom in geoms],
                                            out_shape=geobox.shape,
                                            transform=geobox.affine,
@@ -99,9 +104,11 @@ def get_epsg(dataset):
 
 
 def remove_cloud_nodata(source_prod, data, mask_band): 
-    ls8_USGS_cloud_pixel_qa_value = [324, 352, 368, 386, 388, 392, 400, 416, 432, 480, 
-                                 864, 880, 898, 900, 904, 928, 944, 992, 1350]
-    non_ls8_USGS_cloud_pixel_qa_value = [72, 96, 112, 130, 132, 136, 144, 160, 176, 224]
+    ls8_USGS_cloud_pixel_qa_value = [324, 352, 368, 386, 388, 392, 400, 416, 
+                                     432, 480, 864, 880, 898, 900, 904, 928, 
+                                     944, 992, 1350]
+    non_ls8_USGS_cloud_pixel_qa_value = [72, 96, 112, 130, 132, 136, 144, 160, 
+                                         176, 224]
     non_ls8_USGS_sr_cloud_qa_value = [2, 4, 12, 20, 34, 36, 52]
     mask_data = data[mask_band]
     nodata_value = mask_data.nodata
@@ -128,12 +135,6 @@ def remove_cloud_nodata(source_prod, data, mask_band):
     return cld_free_valid
 
     
-def cal_valid_data_per(data):
-    print (data)
-#     valid_pixel_per = np.count_nonzero(~np.isnan(band_info.loc[a_time].values)) * 100/ band_info.loc[a_time].values.size
-
-
-
 def only_return_whole_scene(data):
     
     all_time_list = list(data.time.values)
@@ -193,7 +194,18 @@ def get_common_dates_data(items_list):
         items_list[i][list(items_list[i].keys())[0]]['data'] = data_common
         i+=1
                 
-    return items_list    
+    return items_list
+    
+
+def get_common_dates(input_data_list):
+    for key, items_list in input_data_list.items():
+        if len(items_list) > 1:
+            common_dates_item_list = get_common_dates_data(items_list)
+        else:
+            common_dates_item_list = []
+            
+        input_data_list[key] = common_dates_item_list
+    return input_data_list   
     
     
 def get_data_opensource(prod_info, input_lon, input_lat, acq_min, acq_max, 
@@ -222,19 +234,24 @@ def get_data_opensource(prod_info, input_lon, input_lat, acq_min, acq_max,
                  'y' : (input_lat, input_lat+window_size/100000),
                 }
             sample_fd_ds = remotedc.find_datasets(product=source_prod, 
-                                                  group_by='solar_day', **fd_query)                      
+                                                  group_by='solar_day', 
+                                                  **fd_query)                      
 
             if (len(sample_fd_ds)) > 0:
                 # decidce pixel size for output data
-                pixel_x, pixel_y = get_pixel_size(sample_fd_ds[0], source_band_list)
+                pixel_x, pixel_y = get_pixel_size(sample_fd_ds[0], 
+                                                  source_band_list)
+                
                 log.info('Output pixel size for product {}: x={}, y={}'.format(source_prod, pixel_x, pixel_y))
 
                 # get target epsg from metadata
                 target_epsg = get_epsg(sample_fd_ds[0])
-                log.info('CRS for product {}: {}'.format(source_prod, target_epsg))
+                log.info('CRS for product {}: {}'.format(source_prod, 
+                                                         target_epsg))
 
-                x1, y1, x2, y2 = setQueryExtent(target_epsg, input_lon, input_lat, window_size)
-
+                x1, y1, x2, y2 = setQueryExtent(target_epsg, input_lon, 
+                                                input_lat, window_size)                                                              
+                
                 query = {        
                     'time': (acq_min, acq_max),
                      'x' : (x1, x2),
@@ -304,12 +321,14 @@ def get_data_opensource_shapefile(prod_info, acq_min, acq_max, shapefile,
 
                 if (len(sample_fd_ds)) > 0:
                     # decidce pixel size for output data
-                    pixel_x, pixel_y = get_pixel_size(sample_fd_ds[0], source_band_list)
+                    pixel_x, pixel_y = get_pixel_size(sample_fd_ds[0], 
+                                                      source_band_list)
                     log.info('Output pixel size for product {}: x={}, y={}'.format(source_prod, pixel_x, pixel_y))
 
                     # get target epsg from metadata
                     target_epsg = get_epsg(sample_fd_ds[0])
-                    log.info('CRS for product {}: {}'.format(source_prod, target_epsg))
+                    log.info('CRS for product {}: {}'.format(source_prod, 
+                                                             target_epsg))
                         
                     query = {
                             'time': (acq_min, acq_max),
@@ -346,16 +365,78 @@ def get_data_opensource_shapefile(prod_info, acq_min, acq_max, shapefile,
                     
     return return_data 
 
+
+# Functions of loading data in four different ways
+def single_loc_process(prod_info, acq_min, acq_max, lon, lat, window_size, no_partial_scenes):
+    
+    loaded_data = get_data_opensource(prod_info, lon, lat, acq_min, acq_max,  window_size, no_partial_scenes)        
+    if loaded_data[prod_info[1]]['data'].data_vars and len(loaded_data[prod_info[1]]['data'].time) > 0:
+        return loaded_data
+    else:
+        print ('{}: No data available\r'.format(prod_info[1]))
+        log.info('{}: No data available\r'.format(prod_info[1]))
+        
+
+def multiple_loc_process(prod_info, acq_min, acq_max, lon_lat_file, window_size, no_partial_scenes, input_data_list):
+    
+    with open(lon_lat_file, 'r') as loc_file:
+        all_locs = loc_file.readlines()
+    
+    for a_loc in all_locs:
+        lon = float(a_loc.split(',')[1].strip())
+        lat = float(a_loc.split(',')[0].strip())
+        loc_id = a_loc.split(',')[2].strip()
+        log.info('{}, {}, {}'.format(lon, lat, loc_id))
+                
+        loaded_data = get_data_opensource(prod_info, lon, lat, acq_min, acq_max,  window_size, no_partial_scenes) 
+        
+        if loaded_data[prod_info[1]]['data'].data_vars:            
+            if ((lon, lat), (acq_min, acq_max)) not in input_data_list:
+                input_data_list[((lon, lat), (acq_min, acq_max))] = []
+            input_data_list[((lon, lat), (acq_min, acq_max))].append(loaded_data)
+        else:
+            log.info('{}: No data available\r'.format(prod_info[1])) 
+            
+    return input_data_list
+
+
+def single_shape_process(prod_info, acq_min, acq_max, shapefile, no_partial_scenes):
+    
+    loaded_data = get_data_opensource_shapefile(prod_info, acq_min, acq_max, shapefile, no_partial_scenes) 
+
+    if loaded_data[prod_info[1]]['data'].data_vars:
+        return loaded_data
+    else:
+        log.info('{}: No data available\r'.format(prod_info[1]))
+        
+
+def multi_shape_process(prod_info, acq_min, acq_max, multi_shape_file, no_partial_scenes, input_data_list):
+    
+    with open(multi_shape_file, 'r') as loc_file:
+        all_locs = loc_file.readlines()
+        
+    for a_shapefile in all_locs:  
+        a_shapefile = a_shapefile.strip()
+        log.info(a_shapefile)
+        loaded_data = get_data_opensource_shapefile(prod_info, acq_min, acq_max, a_shapefile, no_partial_scenes) 
+        
+        if loaded_data[prod_info[1]]['data'].data_vars:
+            if (a_shapefile, (acq_min, acq_max)) not in input_data_list:
+                input_data_list[(a_shapefile, (acq_min, acq_max))] = []
+            input_data_list[(a_shapefile, (acq_min, acq_max))].append(loaded_data)
+        else:
+            log.info('{}: No data available\r'.format(prod_info[1])) 
+            
+    return input_data_list
     
     
-
-
-
 def convert2original_loc_time(loc_time):
     if '.shp' in loc_time:
-        orig_loc_time = (loc_time.split(' and ')[0], eval(loc_time.split(' and ')[1]))
+        orig_loc_time = (loc_time.split(' and ')[0], 
+                         eval(loc_time.split(' and ')[1]))
     else:
-        orig_loc_time = (eval(loc_time.split(' and ')[0]), eval(loc_time.split(' and ')[1]))
+        orig_loc_time = (eval(loc_time.split(' and ')[0]), 
+                         eval(loc_time.split(' and ')[1]))
         
     return orig_loc_time
 
@@ -427,21 +508,257 @@ def draw_stat(plot_info, label, min_reflect, max_reflect, **kwargs):
             )
         plot_data_list.append(plot_std_nag)
     
-    fig = dict(data=plot_data_list, layout={'title': str(label), 'yaxis': {'range': [min_reflect, max_reflect]}})
+    fig = dict(data=plot_data_list, 
+               layout={
+                       'title': str(label), 
+                       'yaxis': {'range': [min_reflect, max_reflect]}
+                      })
     plotly.offline.iplot(fig, filename='spectrum')
+     
+
+def create_sub_folder(root, sub_folder): 
+    output = pjoin(root, sub_folder)
+    if not os.path.exists(output):
+        os.makedirs(output)
     
+    return output
+
     
+def produce_ga_output(sub_type, ard, ga_fd_ds, output_file, ga_fields):
+       
+    band_no = {'LANDSAT_5': {'blue':'band_1', 'green':'band_2', 'red':'band_3', 
+                             'nir':'band_4',  'swir1':'band_5', 
+                             'swir2':'band_7'},
+               'LANDSAT_7': {'blue':'band_1', 'green':'band_2', 'red':'band_3', 
+                             'nir':'band_4', 'swir1':'band_5', 
+                             'swir2':'band_7'},
+               'LANDSAT_8': {'coastal_aerosol':'band_1', 'blue':'band_2', 
+                             'green':'band_3', 'red':'band_4', 'nir':'band_5', 
+                             'swir1':'band_6', 'swir2':'band_7'}
+              }
+              
+#    extra_fields_from_bands = ['solar_azimuth', 'solar_zenith', 
+#                               'azimuthal_exiting', 'azimuthal_incident', 
+#                               'exiting', 'incident']
+#    extra_fields_from_metadata = ['Aerosol', 'brdf_geo', 'brdf_iso', 
+#                                  'brdf_vol', 'ozone', 'water_vapour', 
+#                                  'cloud_cover_percentage']
+#    first_part_fields = ['Band', 'Date', 'Satellite', 'Sensor','Mean_sr', 
+#                         'Min_sr', 'Max_sr', 'Std_sr', 'Variance_sr', 
+#                         'valid_pixel_percentage'] 
+#                         
+#    all_fields = first_part_fields + extra_fields_from_metadata + extra_fields_from_bands     
+      
+    with open(output_file, 'w') as csv_file:                                                                                
+        csv_writer = csv.writer(csv_file) 
+#        csv_writer.writerow(all_fields)
+        csv_writer.writerow(ga_fields) 
+        
+        for band in ard.data_vars:
+            if band.split('_')[0] == sub_type and 'contiguity' not in band:
+                band_info = ard[band]
+                
+                for a_time in list(band_info.time.values):
+                    date = str(a_time)[:19]
+                    # sr statistic info
+                    with warnings.catch_warnings():
+                        warnings.simplefilter("ignore")                
+                        mean_sr = np.nanmean(band_info.loc[a_time].values)
+                        min_sr = np.nanmin(band_info.loc[a_time].values)
+                        max_sr = np.nanmax(band_info.loc[a_time].values)
+                        std_sr = np.nanstd(band_info.loc[a_time].values)
+                        variance_sr = np.nanvar(band_info.loc[a_time].values)
+
+                    valid_pixel_per = np.count_nonzero(~np.isnan(band_info.loc[a_time].values)) * 100/ band_info.loc[a_time].values.size
+                    
+                    # info from other bands
+                    solar_azimuth = np.nanmean(ard.solar_azimuth.loc[a_time].values)
+                    solar_zenith = np.nanmean(ard.solar_zenith.loc[a_time].values)
+                    azimuthal_exiting = np.nanmean(ard.azimuthal_exiting.loc[a_time].values)
+                    azimuthal_incident = np.nanmean(ard.azimuthal_incident.loc[a_time].values)
+                    exiting = np.nanmean(ard.exiting.loc[a_time].values)
+                    incident = np.nanmean(ard.incident.loc[a_time].values)
+                    
+                    # info from metadata 
+                    sat = ''
+                    sensor = ''
+                    aerosol = ''
+                    brdf_geo = ''
+                    brdf_iso = ''
+                    brdf_vol = ''
+                    ozone = ''
+                    water_vapour = ''
+                    cloud_cover_per = ''
+                            
+                    for ds in ga_fd_ds:
+                        ds_time = '{}T{}'.format(str(ds.metadata_doc['extent']['center_dt'])[:10], 
+                                                 str(ds.metadata_doc['extent']['center_dt'])[11:26])
+                        
+                        if ds_time[:16] in str(a_time):                
+                            sat = ds.metadata_doc['platform']['code']
+                            sensor = ds.metadata_doc['instrument']['name']
+
+                            band_no_prefix = ''.join(band.split('_')[1:])
+                            if band_no_prefix == 'coastalaerosol':
+                                band_no_prefix = 'coastal_aerosol'
+
+                            if band_no_prefix == 'coastal_aerosol' and sat != 'LANDSAT_8':
+                                continue
+  
+                            if 'aerosol' in ds.metadata_doc['lineage']['ancillary']:
+                                aerosol = ds.metadata_doc['lineage']['ancillary']['aerosol']['value']
+                            if 'brdf_geo_{}'.format(band_no[sat][band_no_prefix]) in ds.metadata_doc['lineage']['ancillary']:
+                                brdf_geo = ds.metadata_doc['lineage']['ancillary']['brdf_geo_{}'.format(band_no[sat][band_no_prefix])]['value']                           
+                            if 'brdf_iso_{}'.format(band_no[sat][band_no_prefix]) in ds.metadata_doc['lineage']['ancillary']:
+                                brdf_iso = ds.metadata_doc['lineage']['ancillary']['brdf_iso_{}'.format(band_no[sat][band_no_prefix])]['value']
+                            if 'brdf_vol_{}'.format(band_no[sat][band_no_prefix]) in ds.metadata_doc['lineage']['ancillary']:
+                                brdf_vol = ds.metadata_doc['lineage']['ancillary']['brdf_vol_{}'.format(band_no[sat][band_no_prefix])]['value']
+                            if 'ozone' in ds.metadata_doc['lineage']['ancillary']:
+                                ozone = ds.metadata_doc['lineage']['ancillary']['ozone']['value']
+                            if 'water_vapour' in ds.metadata_doc['lineage']['ancillary']:
+                                water_vapour = ds.metadata_doc['lineage']['ancillary']['water_vapour']['value']
+                            if 'other_metadata' in ds.metadata_doc['lineage']['source_datasets']:
+                                if 'IMAGE_ATTRIBUTES' in ds.metadata_doc['lineage']['source_datasets']['other_metadata']:
+                                    if 'cloud_cover_percentage' in ds.metadata_doc['lineage']['source_datasets']['other_metadata']['IMAGE_ATTRIBUTES']:
+                                        cloud_cover_per = ds.metadata_doc['lineage']['source_datasets']['other_metadata']['IMAGE_ATTRIBUTES']['CLOUD_COVER']                                   
+                          
+                            break                                
+                            
+                    csv_writer.writerow([band, date, sat, sensor, mean_sr, min_sr, max_sr, std_sr, variance_sr, 
+                                         valid_pixel_per, aerosol, brdf_geo, brdf_iso, brdf_vol, 
+                                         ozone, water_vapour, cloud_cover_per, solar_azimuth, solar_zenith,
+                                         azimuthal_exiting, azimuthal_incident, exiting, incident])
+                                 
+                        
+def match_usgs_to_nbart_null(usgs_l2, match_ard):
+    # find the nbart data of match_ard
+    ard_useful_bands = [band for band in match_ard.data_vars 
+                        if 'nbart_' in band and 'contiguity' not in band]
+    ard_nbart = match_ard[ard_useful_bands]
+     
+    # mask the null pixels for USGS as NBART                      
+    nbart_nan = xr.ufuncs.isnan(ard_nbart)                    
+    for band in ard_nbart.data_vars:
+        band_no_prefix = ''.join(band.split('_')[1:])
+        if band_no_prefix == 'coastalaerosol':
+            band_no_prefix = 'coastal_aerosol'
+        usgs_l2[band_no_prefix] = usgs_l2[band_no_prefix].where(~nbart_nan[band].values, np.nan)
+        
+    return usgs_l2                                                          
+                       
+                       
+def produce_usgs_output(usgs_l2, usgs_fd_ds, output_file, usgs_fields, 
+                        usgs_useless_bands):                 
+    # usgs output
+    band_interest = list(usgs_l2.data_vars)
     
-def creat_log_file():
-    """
+#    useless_bands = ['sr_aerosol', 'quality', 'radsat_qa',
+#                     'sr_cloud_qa', 'sr_atmos_opacity']
+                 
+    with open(output_file, 'w') as csv_file: 
+        csv_writer = csv.writer(csv_file) 
+#        csv_writer.writerow(['Band', 'Date', 'Satellite', 'Sensor', 'Mean_sr', 
+#                             'Min_sr', 'Max_sr', 'Std_sr', 'Variance_sr', 
+#                             'valid_pixel_percentage', 'sr_atmos_opacity', 
+#                             'sr_aerosol'])
+        csv_writer.writerow(usgs_fields)
     
-    """
+        for band in band_interest:
+            if band not in usgs_useless_bands:
+                band_info = usgs_l2[band]
+                for time in list(band_info.time.values):
+                    date = str(time)[:19]
     
-    log_folder = os.path.join('.', 'logs')
+                    with warnings.catch_warnings():
+                        warnings.simplefilter("ignore")
+                        mean_sr = np.nanmean(band_info.loc[time].values)
+                        min_sr = np.nanmin(band_info.loc[time].values)
+                        max_sr = np.nanmax(band_info.loc[time].values)
+                        std_sr = np.nanstd(band_info.loc[time].values)
+                        variance_sr = np.nanvar(band_info.loc[time].values)
     
-    if not os.path.exists(log_folder):
-        os.makedirs(log_folder)
-           
-    log_file = os.path.join(log_folder, '{}.log'.format(str(datetime.now())))
+                    valid_pixel_per = np.count_nonzero(~np.isnan(band_info.loc[time].values)) * 100/ band_info.loc[time].values.size                
     
-    return log_file
+                    for ds in usgs_fd_ds:
+                        if str(ds.metadata_doc['extent']['center_dt'])[:16] in str(time):
+                            sat = ds.metadata_doc['platform']['code']
+                            sensor = ds.metadata_doc['instrument']['name']
+                            break
+                        
+                    sr_atmos_opacity = ''
+                    sr_aerosol = ''
+                    if sat != 'LANDSAT_8':
+                        sr_atmos_opacity = np.nanmean(usgs_l2.sr_atmos_opacity.loc[time].values) * 0.001
+                    else: 
+                        sr_aerosol = np.nanmean(usgs_l2.sr_aerosol.loc[time].values)
+                        if sr_aerosol in [66, 68, 72, 80, 96, 100]:
+                            sr_aerosol = 'Low-level aerosol'
+                        elif sr_aerosol in [130, 132, 136, 144, 160, 164]:    
+                            sr_aerosol = 'Medium-level aerosol'
+                        elif sr_aerosol in [194, 196, 200, 208, 224, 228]:
+                            sr_aerosol = 'High-level aerosol'
+                
+                    csv_writer.writerow([band, date, sat, sensor, mean_sr, min_sr, 
+                                         max_sr, std_sr, variance_sr, 
+                                         valid_pixel_per, 
+                                         sr_atmos_opacity, sr_aerosol])       
+                                         
+                                         
+def produce_reports(report_folder, loaded_products_list, common_dates):
+    print ('Produce reports ...')  
+    
+    configFile = './utilities/report_fields.cfg'
+    config = configparser.RawConfigParser()
+    config.read(configFile)
+    
+    usgs_fields = config.get('Fields', 'USGS_fields')
+    usgs_useless_bands = config.get('Fields', 'USGS_useless_bands')
+    ga_fields = config.get('Fields', 'GA_fields')
+    
+    for key, items_list in loaded_products_list.items():        
+        if len(items_list) > 0:
+            if '.shp' in key[0]:
+                sub_folder = os.path.splitext(os.path.basename(key[0]))[0]
+            else:
+                sub_folder = '{}_{}'.format(str(int(key[0][0])), 
+                                            str(int(key[0][1])))
+                                            
+            report_loc_folder = create_sub_folder(report_folder, sub_folder)            
+        
+        for sub_type in ['lambertian', 'nbar', 'nbart']:
+            for item in items_list:
+                prod_name = list(item.keys())[0]
+                prod_data = item[prod_name]['data']
+                prod_ds_list = item[prod_name]['find_list']
+                
+                output_file = pjoin(report_loc_folder, 
+                                    '{}_{}_{}_{}.csv'.format(prod_name, 
+                                                             sub_type,
+                                                             str(key[1][0]), 
+                                                             str(key[1][1])))
+                if not os.path.isfile(output_file):                                                             
+                    print ('Produce {}'.format(output_file))
+                    log.info('Produce {}'.format(output_file))
+                    
+                    if 'ard' in prod_name:                        
+                        produce_ga_output(sub_type, prod_data, prod_ds_list, 
+                                          output_file, ga_fields)
+                    if 'usgs' in prod_name:
+                        if sub_type == 'nbart':
+                            if common_dates:
+                                # find match ard data
+                                match_ard = '{}_ard'.format(prod_name.split('_')[0])
+                                for a_prod in items_list:
+                                    if list(a_prod.keys())[0] == match_ard:
+                                        match_ard_data = a_prod[match_ard]['data']
+                                        break
+                                    
+                                prod_data = match_usgs_to_nbart_null(prod_data, 
+                                                                     match_ard_data)
+                            
+                        produce_usgs_output(prod_data, prod_ds_list, 
+                                            output_file, usgs_fields, 
+                                            usgs_useless_bands)                       
+                else:
+                    print ('{} already exists !'.format(output_file))
+                    log.info('{} already exists !'.format(output_file))
