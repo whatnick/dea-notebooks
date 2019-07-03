@@ -22,6 +22,7 @@ import os
 import csv
 from os.path import join as pjoin
 import configparser
+import ast
 
 
 # functions to retrieve data
@@ -536,22 +537,9 @@ def produce_ga_output(sub_type, ard, ga_fd_ds, output_file, ga_fields):
                              'green':'band_3', 'red':'band_4', 'nir':'band_5', 
                              'swir1':'band_6', 'swir2':'band_7'}
               }
-              
-#    extra_fields_from_bands = ['solar_azimuth', 'solar_zenith', 
-#                               'azimuthal_exiting', 'azimuthal_incident', 
-#                               'exiting', 'incident']
-#    extra_fields_from_metadata = ['Aerosol', 'brdf_geo', 'brdf_iso', 
-#                                  'brdf_vol', 'ozone', 'water_vapour', 
-#                                  'cloud_cover_percentage']
-#    first_part_fields = ['Band', 'Date', 'Satellite', 'Sensor','Mean_sr', 
-#                         'Min_sr', 'Max_sr', 'Std_sr', 'Variance_sr', 
-#                         'valid_pixel_percentage'] 
-#                         
-#    all_fields = first_part_fields + extra_fields_from_metadata + extra_fields_from_bands     
-      
+                    
     with open(output_file, 'w') as csv_file:                                                                                
-        csv_writer = csv.writer(csv_file) 
-#        csv_writer.writerow(all_fields)
+        csv_writer = csv.writer(csv_file)
         csv_writer.writerow(ga_fields) 
         
         for band in ard.data_vars:
@@ -650,17 +638,10 @@ def match_usgs_to_nbart_null(usgs_l2, match_ard):
 def produce_usgs_output(usgs_l2, usgs_fd_ds, output_file, usgs_fields, 
                         usgs_useless_bands):                 
     # usgs output
-    band_interest = list(usgs_l2.data_vars)
-    
-#    useless_bands = ['sr_aerosol', 'quality', 'radsat_qa',
-#                     'sr_cloud_qa', 'sr_atmos_opacity']
+    band_interest = list(usgs_l2.data_vars)    
                  
     with open(output_file, 'w') as csv_file: 
         csv_writer = csv.writer(csv_file) 
-#        csv_writer.writerow(['Band', 'Date', 'Satellite', 'Sensor', 'Mean_sr', 
-#                             'Min_sr', 'Max_sr', 'Std_sr', 'Variance_sr', 
-#                             'valid_pixel_percentage', 'sr_atmos_opacity', 
-#                             'sr_aerosol'])
         csv_writer.writerow(usgs_fields)
     
         for band in band_interest:
@@ -711,9 +692,9 @@ def produce_reports(report_folder, loaded_products_list, common_dates):
     config = configparser.RawConfigParser()
     config.read(configFile)
     
-    usgs_fields = config.get('Fields', 'USGS_fields')
-    usgs_useless_bands = config.get('Fields', 'USGS_useless_bands')
-    ga_fields = config.get('Fields', 'GA_fields')
+    usgs_fields = ast.literal_eval(config.get('Fields', 'USGS_fields'))
+    usgs_useless_bands = ast.literal_eval(config.get('Fields', 'USGS_useless_bands'))
+    ga_fields = ast.literal_eval(config.get('Fields', 'GA_fields'))
     
     for key, items_list in loaded_products_list.items():        
         if len(items_list) > 0:
