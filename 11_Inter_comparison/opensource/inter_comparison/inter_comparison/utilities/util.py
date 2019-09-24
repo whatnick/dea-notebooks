@@ -367,10 +367,29 @@ def get_data_opensource_shapefile(prod_info, acq_min, acq_max, shapefile,
     return return_data 
 
 
+def aleady_loaded(a_prod, acq_min, acq_max, data_list, **kwargs):    
+    loc_time = (kwargs['loc'], (acq_min, acq_max))        
+    loaded = False    
+    if loc_time in data_list:
+        # find all products with the same product name as input product
+        products = [prod for prod in data_list[loc_time] 
+                    if list(prod.keys())[0] == a_prod[1]]
+        if len(products) > 0:                    
+            # check if any one product has the same bands n mask band loaded
+            for item in products:
+                if set(item[a_prod[1]]['data'].data_vars) == set(a_prod[2]):
+                    if item[a_prod[1]]['mask_band'] == a_prod[3]:
+                        loaded = True
+                        break         
+    return loaded      
+
+
 # Functions of loading data in four different ways
-def single_loc_process(prod_info, acq_min, acq_max, lon, lat, window_size, no_partial_scenes):
+def single_loc_process(prod_info, acq_min, acq_max, lon, lat, window_size, 
+                       no_partial_scenes):
     
-    loaded_data = get_data_opensource(prod_info, lon, lat, acq_min, acq_max,  window_size, no_partial_scenes)        
+    loaded_data = get_data_opensource(prod_info, lon, lat, acq_min, acq_max, 
+                                      window_size, no_partial_scenes)        
     if loaded_data[prod_info[1]]['data'].data_vars and len(loaded_data[prod_info[1]]['data'].time) > 0:
         return loaded_data
     else:
@@ -378,7 +397,8 @@ def single_loc_process(prod_info, acq_min, acq_max, lon, lat, window_size, no_pa
         log.info('{}: No data available\r'.format(prod_info[1]))
         
 
-def multiple_loc_process(prod_info, acq_min, acq_max, lon_lat_file, window_size, no_partial_scenes, input_data_list):
+def multiple_loc_process(prod_info, acq_min, acq_max, lon_lat_file, 
+                         window_size, no_partial_scenes, input_data_list):
     
     with open(lon_lat_file, 'r') as loc_file:
         all_locs = loc_file.readlines()
@@ -388,22 +408,29 @@ def multiple_loc_process(prod_info, acq_min, acq_max, lon_lat_file, window_size,
         lat = float(a_loc.split(',')[0].strip())
         loc_id = a_loc.split(',')[2].strip()
         log.info('{}, {}, {}'.format(lon, lat, loc_id))
-                
-        loaded_data = get_data_opensource(prod_info, lon, lat, acq_min, acq_max,  window_size, no_partial_scenes) 
         
-        if loaded_data[prod_info[1]]['data'].data_vars:            
-            if ((lon, lat), (acq_min, acq_max)) not in input_data_list:
-                input_data_list[((lon, lat), (acq_min, acq_max))] = []
-            input_data_list[((lon, lat), (acq_min, acq_max))].append(loaded_data)
-        else:
-            log.info('{}: No data available\r'.format(prod_info[1])) 
+        kwargs = {'loc': (lon, lat)}
+        if not aleady_loaded(prod_info, acq_min, acq_max, input_data_list, 
+                             **kwargs):        
+            loaded_data = get_data_opensource(prod_info, lon, lat, acq_min, 
+                                              acq_max,  window_size, 
+                                              no_partial_scenes) 
+                        
+            if loaded_data[prod_info[1]]['data'].data_vars:            
+                if ((lon, lat), (acq_min, acq_max)) not in input_data_list:
+                    input_data_list[((lon, lat), (acq_min, acq_max))] = []
+                input_data_list[((lon, lat), (acq_min, acq_max))].append(loaded_data)
+            else:
+                log.info('{}: No data available\r'.format(prod_info[1])) 
             
     return input_data_list
 
 
-def single_shape_process(prod_info, acq_min, acq_max, shapefile, no_partial_scenes):
+def single_shape_process(prod_info, acq_min, acq_max, shapefile, 
+                         no_partial_scenes):
     
-    loaded_data = get_data_opensource_shapefile(prod_info, acq_min, acq_max, shapefile, no_partial_scenes) 
+    loaded_data = get_data_opensource_shapefile(prod_info, acq_min, acq_max, 
+                                                shapefile, no_partial_scenes) 
 
     if loaded_data[prod_info[1]]['data'].data_vars:
         return loaded_data
@@ -411,7 +438,8 @@ def single_shape_process(prod_info, acq_min, acq_max, shapefile, no_partial_scen
         log.info('{}: No data available\r'.format(prod_info[1]))
         
 
-def multi_shape_process(prod_info, acq_min, acq_max, multi_shape_file, no_partial_scenes, input_data_list):
+def multi_shape_process(prod_info, acq_min, acq_max, multi_shape_file, 
+                        no_partial_scenes, input_data_list):
     
     with open(multi_shape_file, 'r') as loc_file:
         all_locs = loc_file.readlines()
@@ -419,14 +447,20 @@ def multi_shape_process(prod_info, acq_min, acq_max, multi_shape_file, no_partia
     for a_shapefile in all_locs:  
         a_shapefile = a_shapefile.strip()
         log.info(a_shapefile)
-        loaded_data = get_data_opensource_shapefile(prod_info, acq_min, acq_max, a_shapefile, no_partial_scenes) 
         
-        if loaded_data[prod_info[1]]['data'].data_vars:
-            if (a_shapefile, (acq_min, acq_max)) not in input_data_list:
-                input_data_list[(a_shapefile, (acq_min, acq_max))] = []
-            input_data_list[(a_shapefile, (acq_min, acq_max))].append(loaded_data)
-        else:
-            log.info('{}: No data available\r'.format(prod_info[1])) 
+        kwargs = {'loc': a_shapefile}
+        if not aleady_loaded(prod_info, acq_min, acq_max, input_data_list, 
+                             **kwargs):
+            loaded_data = get_data_opensource_shapefile(prod_info, acq_min, 
+                                                        acq_max, a_shapefile, 
+                                                        no_partial_scenes) 
+            
+            if loaded_data[prod_info[1]]['data'].data_vars:
+                if (a_shapefile, (acq_min, acq_max)) not in input_data_list:
+                    input_data_list[(a_shapefile, (acq_min, acq_max))] = []
+                input_data_list[(a_shapefile, (acq_min, acq_max))].append(loaded_data)
+            else:
+                log.info('{}: No data available\r'.format(prod_info[1])) 
             
     return input_data_list
     
@@ -442,20 +476,20 @@ def convert2original_loc_time(loc_time):
     return orig_loc_time
 
 
-
-def draw_stat(plot_info, label, min_reflect, max_reflect, **kwargs): 
-    
-    plot_data_list = []  
+def draw_stat(plot_info, label, min_reflect, max_reflect, **kwargs):
+    plot_data_list = [] 
+    range_min_value = 10000
+    range_max_value = 0
     for key, value in plot_info.items():        
         data = value['data']
         colour = value['colour']
         
         plot_band = kwargs[key] 
         band_data = data[plot_band] 
-
+               
         # mean value for all scenes over the polygon area
         mean = band_data.mean(dim=('x', 'y')).mean().values
-        std = band_data.mean(dim=('x', 'y')).std().values
+        std = band_data.mean(dim=('x', 'y')).std().values        
         
         # mean values for each scene over the polygon area
         mean_list = band_data.mean(dim=('x', 'y')).values 
@@ -508,12 +542,34 @@ def draw_stat(plot_info, label, min_reflect, max_reflect, **kwargs):
                 'dash': 'dashdot',}
             )
         plot_data_list.append(plot_std_nag)
+                
+        # decide the proper display range
+        if min_reflect == '' and max_reflect == '':        
+            # max n min value for all scenes over polygon area to get yaxis range
+            min_value = int(band_data.mean(dim=('x', 'y')).min().values)
+            max_value = int(band_data.mean(dim=('x', 'y')).max().values)
+            if min_value < range_min_value:
+                range_min_value = min_value
+            if max_value > range_max_value:
+                range_max_value = max_value
     
+    if min_reflect == '' and max_reflect == '':    
+        min_reflect = range_min_value
+        max_reflect = range_max_value
+    
+    # avoid the error due to time delay
+    if min_reflect == '':
+        min_reflect = 0
+    if max_reflect == '':
+        max_reflect = 10000
+        
     fig = dict(data=plot_data_list, 
                layout={
                        'title': str(label), 
-                       'yaxis': {'range': [min_reflect, max_reflect]}
-                      })
+                       'yaxis': {'range': [0.95*int(min_reflect), 
+                                           1.05*int(max_reflect)]}
+                      })                      
+                      
     plotly.offline.iplot(fig, filename='spectrum')
      
 
