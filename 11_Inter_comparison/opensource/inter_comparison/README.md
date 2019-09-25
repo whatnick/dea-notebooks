@@ -50,27 +50,27 @@ while each line above points to a specific database. The 'default' database in G
 
 ### Part 2: Plot the bands of the selected products
 
-- 14. Run the next three cells in the Jupyter notebook, another GUI is produced for plotting.
+- 1. Run the next three cells in the Jupyter notebook, another GUI is produced for plotting.
 
 ![Alt text](inter_comparison/docs/ploting_data_gui.jpg?raw=true "Title")
 
-- 15. Based on the products loaded earlier, in this GUI, the availble pairs of location and time are shown in the Location and time drop down menu. Select the location and time of your interest. 
+- 2. Based on the products loaded earlier, in this GUI, the availble pairs of location and time are shown in the Location and time drop down menu. Select the location and time of your interest. 
 
-- 16. All products available for this pair of location and time are shown in the Products available drop down menu. Select the product of interest
+- 3. All products available for this pair of location and time are shown in the Products available drop down menu. Select the product of interest
 
-- 17. After the product is selected, its previously loaded bands are shown for user to select one or more bands for plotting
+- 4. After the product is selected, its previously loaded bands are shown for user to select one or more bands for plotting
 
-- 18. Click the Add Products/Bands button to add the product with the selected bands for plotting.
+- 5. Click the Add Products/Bands button to add the product with the selected bands for plotting.
 
-- 19. Repeat step 15 to 18 to select all previously loaded products of interest for plotting 
+- 6. Repeat step 2 to 5 to select all previously loaded products of interest for plotting 
 
-- 20. After all products are selected, click the Plot button to plot these products.
+- 7. After all products are selected, click the Plot button to plot these products.
 
 ![Alt text](inter_comparison/docs/ploting_data.jpg?raw=true "Title")
 
-- 21. Then the time series data for the band (chosen from all available bands) for each product is drawn.
+- 8. Then the time series data for the band (chosen from all available bands) for each product is drawn.
 
-- 22. The data value range can be adjusted by typing the minimum value in the Min value box, and maximum value in the Max value box. 
+- 9. The data value range can be adjusted by typing the minimum value in the Min value box, and maximum value in the Max value box. 
 
-- 23. From the drop down menu for each product user can select different band at one time to draw.
+- 10. From the drop down menu for each product user can select different band at one time to draw.
 
