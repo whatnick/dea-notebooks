@@ -15,7 +15,7 @@
   
 ## Two parts of the comparing products:
 
-### Select products and load them from datacube
+### Part 1: Select products and load them from datacube
 
 ![Alt text](inter_comparison/docs/loading_data_gui.jpg?raw=true "Title")
 
@@ -47,6 +47,8 @@ while each line above points to a specific database. The 'default' database in G
 - 12. Click Output Reports to export all bands for all selected products from datacube
 
 - 13. To use the same parameters in the future, user can save the current setting for future use by typing a name in the Save Settings box at the bottom of the GUI. Then it will be available within the Load Settings box after the cell containing GUI is refreshed. Users can select the saved setting from the Load Settings box.
+
+### Part 2: Plot the bands of the selected products
 
 - 14. Run the next three cells in the Jupyter notebook, another GUI is produced for plotting.
 
