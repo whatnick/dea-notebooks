@@ -8,7 +8,7 @@ Contact: If you need assistance, please post a question on the Open Data Cube Sl
 
 If you would like to report an issue with this script, you can file one on Github (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
 
-Last modified: September 2019
+Last modified: October 2019
 
 '''
 
