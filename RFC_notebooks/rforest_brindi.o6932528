@@ -1,0 +1,24 @@
+Currently Loaded Modulefiles:
+  1) udunits/2.1.24          4) agdc-py3-prod/1.5.4
+  2) agdc-py3-env/20171214   5) dea-prod/20171219
+  3) agdc-py3/1.5.4          6) agdc_statistics/0.9a7
+Traceback (most recent call last):
+  File "my_scripts/RFC_tree_calss_Brin.py", line 38, in <module>
+    from DEADataHandling import tasseled_cap
+  File "/g/data/u46/users/ck9738/dea-notebooks/Algorithms/DEADataHandling.py", line 121
+    def load_sentinel(dc, product, **query, filter_cloud=False, bands_of_interest=None):
+                                                       ^
+SyntaxError: invalid syntax
+
+======================================================================================
+                  Resource Usage on 2018-05-16 15:46:28:
+   Job Id:             6932528.r-man2
+   Project:            u46
+   Exit Status:        1
+   Service Units:      0.00
+   NCPUs Requested:    1                      NCPUs Used: 1               
+                                           CPU Time Used: 00:00:05                                   
+   Memory Requested:   128.0GB               Memory Used: 0B              
+   Walltime requested: 12:00:00            Walltime Used: 00:00:16        
+   JobFS requested:    3.91GB                 JobFS used: 0B              
+======================================================================================

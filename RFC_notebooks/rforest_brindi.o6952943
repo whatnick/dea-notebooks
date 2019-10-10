@@ -1,0 +1,123 @@
+Currently Loaded Modulefiles:
+  1) udunits/2.1.24          4) agdc-py3-prod/1.5.4
+  2) agdc-py3-env/20171214   5) dea-prod/20171219
+  3) agdc-py3/1.5.4          6) agdc_statistics/0.9a7
+Traceback (most recent call last):
+  File "/g/data/v10/public/modules/agdc-py3-env/20171214/envs/agdc/lib/python3.6/site-packages/sqlalchemy/pool.py", line 1122, in _do_get
+    return self._pool.get(wait, self._timeout)
+  File "/g/data/v10/public/modules/agdc-py3-env/20171214/envs/agdc/lib/python3.6/site-packages/sqlalchemy/util/queue.py", line 145, in get
+    raise Empty
+sqlalchemy.util.queue.Empty
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/g/data/v10/public/modules/agdc-py3-env/20171214/envs/agdc/lib/python3.6/site-packages/sqlalchemy/engine/base.py", line 2147, in _wrap_pool_connect
+    return fn()
+  File "/g/data/v10/public/modules/agdc-py3-env/20171214/envs/agdc/lib/python3.6/site-packages/sqlalchemy/pool.py", line 387, in connect
+    return _ConnectionFairy._checkout(self)
+  File "/g/data/v10/public/modules/agdc-py3-env/20171214/envs/agdc/lib/python3.6/site-packages/sqlalchemy/pool.py", line 766, in _checkout
+    fairy = _ConnectionRecord.checkout(pool)
+  File "/g/data/v10/public/modules/agdc-py3-env/20171214/envs/agdc/lib/python3.6/site-packages/sqlalchemy/pool.py", line 516, in checkout
+    rec = pool._do_get()
+  File "/g/data/v10/public/modules/agdc-py3-env/20171214/envs/agdc/lib/python3.6/site-packages/sqlalchemy/pool.py", line 1138, in _do_get
+    self._dec_overflow()
+  File "/g/data/v10/public/modules/agdc-py3-env/20171214/envs/agdc/lib/python3.6/site-packages/sqlalchemy/util/langhelpers.py", line 66, in __exit__
+    compat.reraise(exc_type, exc_value, exc_tb)
+  File "/g/data/v10/public/modules/agdc-py3-env/20171214/envs/agdc/lib/python3.6/site-packages/sqlalchemy/util/compat.py", line 187, in reraise
+    raise value
+  File "/g/data/v10/public/modules/agdc-py3-env/20171214/envs/agdc/lib/python3.6/site-packages/sqlalchemy/pool.py", line 1135, in _do_get
+    return self._create_connection()
+  File "/g/data/v10/public/modules/agdc-py3-env/20171214/envs/agdc/lib/python3.6/site-packages/sqlalchemy/pool.py", line 333, in _create_connection
+    return _ConnectionRecord(self)
+  File "/g/data/v10/public/modules/agdc-py3-env/20171214/envs/agdc/lib/python3.6/site-packages/sqlalchemy/pool.py", line 461, in __init__
+    self.__connect(first_connect_check=True)
+  File "/g/data/v10/public/modules/agdc-py3-env/20171214/envs/agdc/lib/python3.6/site-packages/sqlalchemy/pool.py", line 651, in __connect
+    connection = pool._invoke_creator(self)
+  File "/g/data/v10/public/modules/agdc-py3-env/20171214/envs/agdc/lib/python3.6/site-packages/sqlalchemy/engine/strategies.py", line 105, in connect
+    return dialect.connect(*cargs, **cparams)
+  File "/g/data/v10/public/modules/agdc-py3-env/20171214/envs/agdc/lib/python3.6/site-packages/sqlalchemy/engine/default.py", line 393, in connect
+    return self.dbapi.connect(*cargs, **cparams)
+  File "/g/data/v10/public/modules/agdc-py3-env/20171214/envs/agdc/lib/python3.6/site-packages/psycopg2/__init__.py", line 130, in connect
+    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+psycopg2.OperationalError: could not connect to server: No such file or directory
+	Is the server running locally and accepting
+	connections on Unix domain socket "/tmp/.s.PGSQL.5432"?
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "my_scripts/RFC_tree_calss_Brin.py", line 49, in <module>
+    s2aws = Datacube(config='/home/547/ck9738/datacube-s2.conf')
+  File "/g/data/v10/public/modules/agdc-py3/1.5.4/lib/python3.6/site-packages/datacube/api/core.py", line 81, in __init__
+    self.index = index_connect(config, application_name=app)
+  File "/g/data/v10/public/modules/agdc-py3/1.5.4/lib/python3.6/site-packages/datacube/index/_api.py", line 36, in connect
+    PostgresDb.from_config(local_config, application_name=application_name, validate_connection=validate_connection)
+  File "/g/data/v10/public/modules/agdc-py3/1.5.4/lib/python3.6/site-packages/datacube/index/postgres/_connections.py", line 123, in from_config
+    pool_timeout=config.db_connection_timeout
+  File "/g/data/v10/public/modules/agdc-py3/1.5.4/lib/python3.6/site-packages/datacube/index/postgres/_connections.py", line 98, in create
+    if not tables.database_exists(engine):
+  File "/g/data/v10/public/modules/agdc-py3/1.5.4/lib/python3.6/site-packages/datacube/index/postgres/tables/_core.py", line 134, in database_exists
+    return has_schema(engine, engine)
+  File "/g/data/v10/public/modules/agdc-py3/1.5.4/lib/python3.6/site-packages/datacube/index/postgres/tables/_core.py", line 253, in has_schema
+    return engine.dialect.has_schema(connection, SCHEMA_NAME)
+  File "/g/data/v10/public/modules/agdc-py3-env/20171214/envs/agdc/lib/python3.6/site-packages/sqlalchemy/dialects/postgresql/base.py", line 2195, in has_schema
+    type_=sqltypes.Unicode)]
+  File "/g/data/v10/public/modules/agdc-py3-env/20171214/envs/agdc/lib/python3.6/site-packages/sqlalchemy/engine/base.py", line 2063, in execute
+    connection = self.contextual_connect(close_with_result=True)
+  File "/g/data/v10/public/modules/agdc-py3-env/20171214/envs/agdc/lib/python3.6/site-packages/sqlalchemy/engine/base.py", line 2112, in contextual_connect
+    self._wrap_pool_connect(self.pool.connect, None),
+  File "/g/data/v10/public/modules/agdc-py3-env/20171214/envs/agdc/lib/python3.6/site-packages/sqlalchemy/engine/base.py", line 2151, in _wrap_pool_connect
+    e, dialect, self)
+  File "/g/data/v10/public/modules/agdc-py3-env/20171214/envs/agdc/lib/python3.6/site-packages/sqlalchemy/engine/base.py", line 1465, in _handle_dbapi_exception_noconnection
+    exc_info
+  File "/g/data/v10/public/modules/agdc-py3-env/20171214/envs/agdc/lib/python3.6/site-packages/sqlalchemy/util/compat.py", line 203, in raise_from_cause
+    reraise(type(exception), exception, tb=exc_tb, cause=cause)
+  File "/g/data/v10/public/modules/agdc-py3-env/20171214/envs/agdc/lib/python3.6/site-packages/sqlalchemy/util/compat.py", line 186, in reraise
+    raise value.with_traceback(tb)
+  File "/g/data/v10/public/modules/agdc-py3-env/20171214/envs/agdc/lib/python3.6/site-packages/sqlalchemy/engine/base.py", line 2147, in _wrap_pool_connect
+    return fn()
+  File "/g/data/v10/public/modules/agdc-py3-env/20171214/envs/agdc/lib/python3.6/site-packages/sqlalchemy/pool.py", line 387, in connect
+    return _ConnectionFairy._checkout(self)
+  File "/g/data/v10/public/modules/agdc-py3-env/20171214/envs/agdc/lib/python3.6/site-packages/sqlalchemy/pool.py", line 766, in _checkout
+    fairy = _ConnectionRecord.checkout(pool)
+  File "/g/data/v10/public/modules/agdc-py3-env/20171214/envs/agdc/lib/python3.6/site-packages/sqlalchemy/pool.py", line 516, in checkout
+    rec = pool._do_get()
+  File "/g/data/v10/public/modules/agdc-py3-env/20171214/envs/agdc/lib/python3.6/site-packages/sqlalchemy/pool.py", line 1138, in _do_get
+    self._dec_overflow()
+  File "/g/data/v10/public/modules/agdc-py3-env/20171214/envs/agdc/lib/python3.6/site-packages/sqlalchemy/util/langhelpers.py", line 66, in __exit__
+    compat.reraise(exc_type, exc_value, exc_tb)
+  File "/g/data/v10/public/modules/agdc-py3-env/20171214/envs/agdc/lib/python3.6/site-packages/sqlalchemy/util/compat.py", line 187, in reraise
+    raise value
+  File "/g/data/v10/public/modules/agdc-py3-env/20171214/envs/agdc/lib/python3.6/site-packages/sqlalchemy/pool.py", line 1135, in _do_get
+    return self._create_connection()
+  File "/g/data/v10/public/modules/agdc-py3-env/20171214/envs/agdc/lib/python3.6/site-packages/sqlalchemy/pool.py", line 333, in _create_connection
+    return _ConnectionRecord(self)
+  File "/g/data/v10/public/modules/agdc-py3-env/20171214/envs/agdc/lib/python3.6/site-packages/sqlalchemy/pool.py", line 461, in __init__
+    self.__connect(first_connect_check=True)
+  File "/g/data/v10/public/modules/agdc-py3-env/20171214/envs/agdc/lib/python3.6/site-packages/sqlalchemy/pool.py", line 651, in __connect
+    connection = pool._invoke_creator(self)
+  File "/g/data/v10/public/modules/agdc-py3-env/20171214/envs/agdc/lib/python3.6/site-packages/sqlalchemy/engine/strategies.py", line 105, in connect
+    return dialect.connect(*cargs, **cparams)
+  File "/g/data/v10/public/modules/agdc-py3-env/20171214/envs/agdc/lib/python3.6/site-packages/sqlalchemy/engine/default.py", line 393, in connect
+    return self.dbapi.connect(*cargs, **cparams)
+  File "/g/data/v10/public/modules/agdc-py3-env/20171214/envs/agdc/lib/python3.6/site-packages/psycopg2/__init__.py", line 130, in connect
+    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+sqlalchemy.exc.OperationalError: (psycopg2.OperationalError) could not connect to server: No such file or directory
+	Is the server running locally and accepting
+	connections on Unix domain socket "/tmp/.s.PGSQL.5432"?
+
+
+======================================================================================
+                  Resource Usage on 2018-05-17 10:49:39:
+   Job Id:             6952943.r-man2
+   Project:            u46
+   Exit Status:        1
+   Service Units:      0.01
+   NCPUs Requested:    1                      NCPUs Used: 1               
+                                           CPU Time Used: 00:00:05                                   
+   Memory Requested:   128.0GB               Memory Used: 0B              
+   Walltime requested: 12:00:00            Walltime Used: 00:00:24        
+   JobFS requested:    3.91GB                 JobFS used: 0B              
+======================================================================================
