@@ -93,6 +93,7 @@ def WIT_Africa_drill(feat, crs, time_period, Output_dir, columnName, chunks=None
     ls578_ds = data.where(mask_xr == False)
     #     ls578_ds.astype()
     print(ls578_ds.isel(time=1).red.values.shape)
+    
     ls578_ds = ls578_ds.compute()
 
     print("tasseled cap")
@@ -116,6 +117,7 @@ def WIT_Africa_drill(feat, crs, time_period, Output_dir, columnName, chunks=None
     # #reapply the polygon mask
     wofls = wofls.where(mask_xr == False)
     wofls = wofls.compute()
+    
     wet_wofs = wofls.where(wofls.water == 128)
 
     # use bit values for wet (128) and terrain/low-angle (8)
@@ -141,6 +143,7 @@ def WIT_Africa_drill(feat, crs, time_period, Output_dir, columnName, chunks=None
     # mask with polygon
     fc_ds = fc_ds.where(mask_xr == False)
     fc_ds = fc_ds.compute()
+    
     fc_ds_noTCW = fc_ds.where(tcw == False)
 
     print("all the other things")
@@ -162,6 +165,10 @@ def WIT_Africa_drill(feat, crs, time_period, Output_dir, columnName, chunks=None
     # #re-mask with nans to remove no-data
     BSPVNPV = BSPVNPV.where(FC_mask)
     # restack the Fractional cover dataset all together
+    # CAUTION:ARGMAX DEPENDS ON ORDER OF VARIBALES IN 
+    # DATASET, THESE WILL BE DIFFERENT FOR DIFFERENT COLLECTIONS.
+    # NEED TO ADJUST 0,1,2 BELOW DEPENDING ON ORDER OF FC VARIABLES
+    # IN THE DATASET.
     FC_dominant = xr.Dataset(
         {
             "BS": (BSPVNPV == 2).where(FC_mask),
