@@ -165,7 +165,7 @@ def WIT_Africa_drill(feat, crs, time_period, Output_dir, columnName, chunks=None
     # #re-mask with nans to remove no-data
     BSPVNPV = BSPVNPV.where(FC_mask)
     # restack the Fractional cover dataset all together
-    # CAUTION:ARGMAX DEPENDS ON ORDER OF VARIBALES IN 
+    # CAUTION:ARGMAX DEPENDS ON ORDER OF VARIABALES IN 
     # DATASET, THESE WILL BE DIFFERENT FOR DIFFERENT COLLECTIONS.
     # NEED TO ADJUST 0,1,2 BELOW DEPENDING ON ORDER OF FC VARIABLES
     # IN THE DATASET.
@@ -274,7 +274,7 @@ def WIT_Africa_drill(feat, crs, time_period, Output_dir, columnName, chunks=None
     PolyDrill_df = WOFS_df.round(2)
 
     # save the csv of the output data used to create the stacked plot for the polygon drill
-    PolyDrill_df.to_csv(f"{Output_dir}{polyName}.csv", index_label="Datetime")
+    PolyDrill_df.to_csv(f"{Output_dir}{polyName}{time_period[0]}.csv", index_label="Datetime")
 
     ls578_ds = None
     data = None
