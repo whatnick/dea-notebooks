@@ -1,0 +1,17 @@
+digraph Tree {
+node [shape=box, style="filled, rounded", color="black", fontname=helvetica] ;
+edge [fontname=helvetica] ;
+0 [label="nbart_red_edge_3 <= 938.708\nentropy = 1.342\nsamples = 2396\nvalue = [2396, 157, 190, 1080]\nclass = Water", fillcolor="#f3c3a0"] ;
+1 [label="entropy = 0.0\nsamples = 1490\nvalue = [2396, 0, 0, 0]\nclass = Water", fillcolor="#e58139"] ;
+0 -> 1 [labeldistance=2.5, labelangle=45, headlabel="True"] ;
+2 [label="nbart_red_edge_3 <= 1898.113\nentropy = 1.042\nsamples = 906\nvalue = [0, 157, 190, 1080]\nclass = Mangrove", fillcolor="#e271ec"] ;
+0 -> 2 [labeldistance=2.5, labelangle=-45, headlabel="False"] ;
+3 [label="inundation_freq <= 0.103\nentropy = 0.993\nsamples = 214\nvalue = [0, 157, 190, 0]\nclass = Salt Marsh", fillcolor="#ddeefa"] ;
+2 -> 3 ;
+4 [label="entropy = 0.0\nsamples = 115\nvalue = [0, 0, 190, 0]\nclass = Salt Marsh", fillcolor="#399de5"] ;
+3 -> 4 ;
+5 [label="entropy = 0.0\nsamples = 99\nvalue = [0, 157, 0, 0]\nclass = Clay Pan", fillcolor="#47e539"] ;
+3 -> 5 ;
+6 [label="entropy = 0.0\nsamples = 692\nvalue = [0, 0, 0, 1080]\nclass = Mangrove", fillcolor="#d739e5"] ;
+2 -> 6 ;
+}
