@@ -1,20 +1,20 @@
 ## dea_datahandling.py
 '''
-Description: This file contains a set of python functions for handling 
+Description: This file contains a set of python functions for handling
 Digital Earth Australia data.
 
 License: The code in this notebook is licensed under the Apache License,
-Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0). Digital Earth 
-Australia data is licensed under the Creative Commons by Attribution 4.0 
+Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0). Digital Earth
+Australia data is licensed under the Creative Commons by Attribution 4.0
 license (https://creativecommons.org/licenses/by/4.0/).
 
-Contact: If you need assistance, please post a question on the Open Data 
-Cube Slack channel (http://slack.opendatacube.org/) or on the GIS Stack 
-Exchange (https://gis.stackexchange.com/questions/ask?tags=open-data-cube) 
-using the `open-data-cube` tag (you can view previously asked questions 
-here: https://gis.stackexchange.com/questions/tagged/open-data-cube). 
+Contact: If you need assistance, please post a question on the Open Data
+Cube Slack channel (http://slack.opendatacube.org/) or on the GIS Stack
+Exchange (https://gis.stackexchange.com/questions/ask?tags=open-data-cube)
+using the `open-data-cube` tag (you can view previously asked questions
+here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
 
-If you would like to report an issue with this script, you can file one on 
+If you would like to report an issue with this script, you can file one on
 Github (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
 
 Functions included:
@@ -27,7 +27,7 @@ Functions included:
     pan_sharpen_brovey
     paths_to_datetimeindex
     
-Last modified: January 2020
+Last modified: February 2020
 
 '''
 
@@ -41,6 +41,7 @@ import warnings
 import numpy as np
 import pandas as pd
 import xarray as xr
+from copy import deepcopy
 from collections import Counter
 from datacube.storage import masking
 from scipy.ndimage import binary_dilation
@@ -52,7 +53,7 @@ def load_ard(dc,
              fmask_gooddata=[1, 4, 5],
              mask_pixel_quality=True,
              mask_invalid_data=True,
-             mask_contiguity='nbart_contiguity',
+             mask_contiguity=False,
              mask_dtype=np.float32,
              ls7_slc_off=True,
              product_metadata=False,
@@ -72,7 +73,7 @@ def load_ard(dc,
     shadowed land, snow and water pixels are treated as good quality, 
     but this can be customised using the `fmask_gooddata` parameter.
     
-    Last modified: January 2020
+    Last modified: March 2020
     
     Parameters
     ----------  
@@ -112,23 +113,20 @@ def load_ard(dc,
         An optional boolean indicating whether invalid -999 nodata 
         values should be replaced with NaN. These invalid values can be
         caused by missing data along the edges of scenes, or terrain 
-        effects (for NBAR-T). Be aware that masking out invalid values 
+        effects (for NBART). Be aware that masking out invalid values 
         will convert all numeric values to floating point values when 
         -999 values are replaced with NaN, which can cause memory issues.
     mask_contiguity : str or bool, optional
-        An optional string or boolean indicating whether to mask out 
-        pixels missing data in any band (i.e. "non-contiguous" values). 
-        Although most missing data issues are resolved by 
-        `mask_invalid_data`, this step is important for generating 
-        clean and concistent composite datasets. The default
-        is `mask_contiguity='nbart_contiguity'` which will set any 
-        pixels with non-contiguous values to NaN based on NBART data. 
-        If you are loading NBAR data instead, you should specify
-        `mask_contiguity='nbar_contiguity'` instead. To ignore non-
-        contiguous values completely, set `mask_contiguity=False`.
-        Be aware that masking out non-contiguous values will convert 
-        all numeric values to floating point values when -999 values 
-        are replaced with NaN, which can cause memory issues.
+        An optional string or boolean indicating whether to mask out
+        pixels missing data in any band (i.e. "non-contiguous" values).
+        This can be important for generating clean composite datasets. 
+        The default is False, which will ignore non-contiguous values 
+        completely. If loading NBART data, set the parameter to:       
+        `mask_contiguity='nbart_contiguity'`. If loading NBAR data, 
+        specify `mask_contiguity='nbar_contiguity'` instead. 
+        Non-contiguous pixels will be set to NaN if `dtype='auto'`, or 
+        set to the data's native nodata value if `dtype='native'` 
+        (which can be useful for reducing memory).
     mask_dtype : numpy dtype, optional
         An optional parameter that controls the data type/dtype that
         layers are coerced to when when `mask_pixel_quality=True` or 
@@ -145,11 +143,13 @@ def load_ard(dc,
         'ga_ls5t_ard_3'). Defaults to False.
     **dcload_kwargs : 
         A set of keyword arguments to `dc.load` that define the 
-        spatiotemporal query used to extract data. This can include `x`,
-        `y`, `time`, `resolution`, `resampling`, `group_by`, `crs`
-        etc, and can either be listed directly in the `load_ard` call 
-        (e.g. `x=(150.0, 151.0)`), or by passing in a query kwarg 
-        (e.g. `**query`). For a full list of possible options, see: 
+        spatiotemporal query used to extract data. This typically
+        includes `measurements`, `x`, `y`, `time`, `resolution`, 
+        `resampling`, `group_by` and `crs`. Keyword arguments can 
+        either be listed directly in the `load_ard` call like any 
+        other parameter (e.g. `measurements=['nbart_red']`), or by 
+        passing in a query kwarg dictionary (e.g. `**query`). For a 
+        list of possible options, see the `dc.load` documentation: 
         https://datacube-core.readthedocs.io/en/latest/dev/api/generate/datacube.Datacube.load.html          
         
     Returns
@@ -189,8 +189,15 @@ def load_ard(dc,
             return da
         
         except ValueError:        
-            return da
-        
+            return da        
+      
+
+    # To prevent modifications to dcload_kwargs being made by this 
+    # function remaining after the function is run (potentially causing 
+    # different results each time the function is run), first take a 
+    # deep copy of the dcload_kwargs object. 
+    dcload_kwargs = deepcopy(dcload_kwargs)  
+    
     # Determine if lazy loading is required
     lazy_load = 'dask_chunks' in dcload_kwargs
     
@@ -202,7 +209,8 @@ def load_ard(dc,
                               "'good pixel' percentage. This can "
                               "significantly slow the return of your dataset.")
     
-    # Verify that products were provided    
+    # Verify that products were provided, and that only Sentinel-2 or 
+    # only Landsat products are being loaded at the same time
     if not products:
         raise ValueError("Please provide a list of product names "
                          "to load data from. Valid options are: \n"
@@ -211,20 +219,37 @@ def load_ard(dc,
                          "'s2b_ard_granule'] \nfor Sentinel 2 Definitive, or "
                          "['s2a_nrt_granule', 's2b_nrt_granule'] for "
                          "Sentinel 2 Near Real Time")
+    elif all(['ls' in product for product in products]):
+        product_type = 'ls'
+    elif all(['s2' in product for product in products]):
+        product_type = 's2'
+    else:
+        raise ValueError("Loading both Sentinel-2 and Landsat data "
+                         "at the same time is currently not supported")
 
     # If `measurements` are specified but do not include fmask or 
     # contiguity variables, add these to `measurements`
     to_drop = []  # store loaded var names here to later drop
-    if 'measurements' in dcload_kwargs:
+    fmask_band = 'fmask'
+    
+    if 'measurements' in dcload_kwargs:        
 
-        if 'fmask' not in dcload_kwargs['measurements']:
-            dcload_kwargs['measurements'].append('fmask')
-            to_drop.append('fmask')
+        if fmask_band not in dcload_kwargs['measurements']:
+            dcload_kwargs['measurements'].append(fmask_band)
+            to_drop.append(fmask_band)
 
         if (mask_contiguity and 
             (mask_contiguity not in dcload_kwargs['measurements'])):
             dcload_kwargs['measurements'].append(mask_contiguity)
-            to_drop.append(mask_contiguity)
+            to_drop.append(mask_contiguity)  
+            
+    # If no `measurements` are specified, Landsat ancillary bands are loaded
+    # with a 'oa_' prefix, but Sentinel-2 bands are not. As a work-around, 
+    # we need to rename the default contiguity and fmask bands if loading
+    # Landsat data without specifying `measurements`
+    elif product_type == 'ls': 
+        mask_contiguity = f'oa_{mask_contiguity}' if mask_contiguity else False
+        fmask_band = f'oa_{fmask_band}' 
 
     # Create a list to hold data for each product
     product_data = []
@@ -237,8 +262,19 @@ def load_ard(dc,
             # Load data including fmask band
             print(f'Loading {product} data')
             try:
-                ds = dc.load(product=f'{product}',
-                             **dcload_kwargs)
+                
+                # If dask_chunks is specified, load data using query
+                if lazy_load:
+                    ds = dc.load(product=f'{product}',
+                                 **dcload_kwargs)
+                
+                # If no dask chunks specified, add this param so that
+                # we can lazy load data before filtering by good data
+                else:
+                    ds = dc.load(product=f'{product}',
+                                 dask_chunks={},
+                                 **dcload_kwargs) 
+                
             except KeyError as e:
                 raise ValueError(f'Band {e} does not exist in this product. '
                                  f'Verify all requested `measurements` exist '
@@ -251,14 +287,9 @@ def load_ard(dc,
             if not ls7_slc_off and product == 'ga_ls7e_ard_3':
                 print('    Ignoring SLC-off observations for ls7')
                 ds = ds.sel(time=ds.time < np.datetime64('2003-05-31'))
-                
-            # If no measurements are specified, `fmask` is given a 
-            # different name. If necessary, rename it:
-            if 'oa_fmask' in ds:
-                ds = ds.rename({'oa_fmask': 'fmask'})
 
             # Identify all pixels not affected by cloud/shadow/invalid
-            good_quality = ds.fmask.isin(fmask_gooddata)
+            good_quality = ds[fmask_band].isin(fmask_gooddata)
             
             # The good data percentage calculation has to load in all `fmask`
             # data, which can be slow. If the user has chosen no filtering 
@@ -314,8 +345,8 @@ def load_ard(dc,
                     # above for details   
                     ds = ds.apply(astype_attrs, 
                                   dtype=mask_dtype, 
-                                  keep_attrs=True)
-                    ds = ds.where(ds[mask_contiguity] == 1)
+                                  keep_attrs=True)                    
+                    ds = ds.where(ds[mask_contiguity] == 1)   
 
                 # Optionally add satellite/product name as a new variable
                 if product_metadata:
